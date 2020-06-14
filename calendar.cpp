@@ -18,8 +18,6 @@ calendar::calendar(const calendar& given)
     h_size = given.h_size;
     file_path = new char[strlen(given.file_path)+1];
     strcpy(file_path,given.file_path);
-    file_write.open(given.file_path);
-    file_read.open(given.file_path);
 }
 calendar& calendar::operator=(const calendar& given)
 {
@@ -30,11 +28,7 @@ calendar& calendar::operator=(const calendar& given)
         h_size = given.h_size;
         delete[] file_path;
         file_path = new char[strlen(given.file_path)+1];
-        strcpy(file_path,given.file_path);
-        file_write.close();
-        file_write.open(given.file_path);
-        file_read.close();
-        file_read.open(given.file_path);
+        strcpy(file_path,given.file_path);;
     }
     return *this;
 }
@@ -160,17 +154,56 @@ tm calendar::findslotwith(tm date, unsigned int hours, calendar given)
 }
 calendar& calendar::merge(calendar given)
 {
-    return *this; //
+    //TO DO
+    return *this;
+}
+void calendar::load()
+{
+    std::ifstream file("calendar.dat", std::ios::binary);
+    if (!file)
+    {
+        std::cout << "Bad File!\n";
+        file.close();
+        return;
+    }
+    file.read((char*)&appointments, sizeof(tm));
+    file.read((char*)&h_size, sizeof(int));
+    holidays = new tm*[h_size];
+    file.read((char*)&holidays, h_size*sizeof(tm));
+    int pathName = 0;
+    file.read((char*)&pathName, sizeof(int));
+    delete[] file_path;
+    this->file_path = new char[pathName + 1];
+    file.read(this->file_path, pathName);
+    file.close();
 }
 void calendar::save()
 {
-    //TO DO
+    std::ofstream file("calendar.dat", std::ios::binary);
+    if (!file)
+    {
+        std::cout << "Bad File!\n";
+        file.close();
+        return;
+    }
+    file.write((const char*)&appointments, sizeof(tm));
+    file.write((const char*)&h_size, sizeof(int));
+    file.write((const char*)&holidays, h_size*sizeof(tm));
+    file.write((const char*)strlen(file_path), sizeof(int));
+    file.write(file_path, strlen(file_path));
+    file.close();
 }
-void calendar::saveas()
+void calendar::close()
 {
-    //TO DO
+    (*this).save();
 }
 void calendar::add(tm, tm, tm, char*, char*)
 {
     //Dobavqne v hronologichen red
+}
+void calendar::set_path(char* given)
+{
+    delete file_path;
+    file_path = new char[strlen(given)+1];
+    strcpy(file_path,given);
 }
